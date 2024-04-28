@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CONTAINER_NAME=$MY_NODE_NAME
+CONTAINER_NAME=$HOSTNAME
 
 ERROR_LOGS=$(kubectl logs $CONTAINER_NAME 2>&1 | grep "error\|fail")
 #ERROR_LOGS=$(docker logs $CONTAINER_NAME 2>&1 | grep "error\|fail")
