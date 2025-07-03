@@ -29,7 +29,7 @@ mkdir -p "$ZSH_CUSTOM/plugins"
 
 # ----------- STEP 2: Define .zshrc Template -----------
 
-ZSHRC_CONTENT='
+cat <<'EOF' > /etc/skel/.zshrc
 export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME="robbyrussell"
 
@@ -69,7 +69,7 @@ function git_branch() {
   ref=$(git symbolic-ref --quiet HEAD 2>/dev/null)
   echo " %{\$fg[magenta]%}( \${ref#refs/heads/})%{\$reset_color%}"
 }
-'
+EOF
 
 # ----------- STEP 3: Apply to /etc/skel (for future users) -----------
 
