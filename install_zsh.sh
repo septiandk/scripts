@@ -59,12 +59,12 @@ PROMPT="%{\$fg[blue]%}[%*]%{\$reset_color%} %{\$fg[green]%}%n@%m%{\$reset_color%
 ENABLE_CORRECTION="true"
 COMPLETION_WAITING_DOTS="true"
 HIST_STAMPS="yyyy-mm-dd"
+
 function git_branch() {
   git rev-parse --is-inside-work-tree &>/dev/null || return
   ref=$(git symbolic-ref --quiet HEAD 2>/dev/null)
-  echo " %{$fg[magenta]%}( ${ref#refs/heads/})%{$reset_color%}"
+  echo " %{\$fg[magenta]%}( \${ref#refs/heads/})%{\$reset_color%}"
 }
-
 '
 
 # ----------- STEP 3: Apply to /etc/skel (for future users) -----------
@@ -80,10 +80,13 @@ echo "[*] Applying to existing users..."
 
 for user in $(awk -F: '{ if ($3 >= 1000 && $1 != "nobody") print $1 }' /etc/passwd); do
   HOME_DIR=$(eval echo "~$user")
-
   echo "  -> Configuring user: $user"
 
-  # Copy .oh-my-zsh if needed
+  # Backup
+  cp "$HOME_DIR/.bashrc" "$HOME_DIR/.bashrc.bak" 2>/dev/null || true
+  cp "$HOME_DIR/.profile" "$HOME_DIR/.profile.bak" 2>/dev/null || true
+
+  # Copy .oh-my-zsh
   if [ ! -d "$HOME_DIR/.oh-my-zsh" ]; then
     cp -r "$TEMP_OHMYZSH" "$HOME_DIR/.oh-my-zsh"
     chown -R "$user:$user" "$HOME_DIR/.oh-my-zsh"
@@ -93,14 +96,30 @@ for user in $(awk -F: '{ if ($3 >= 1000 && $1 != "nobody") print $1 }' /etc/pass
   echo "$ZSHRC_CONTENT" > "$HOME_DIR/.zshrc"
   chown "$user:$user" "$HOME_DIR/.zshrc"
 
-  # Change shell to zsh
+  # Set default shell
   chsh -s "$(which zsh)" "$user"
 done
 
-# ----------- STEP 5: Set default shell globally (optional) -----------
+# ----------- STEP 5: Apply to root -----------
 
-echo "[*] Setting Zsh as default shell for new users (via /etc/default/useradd)..."
+echo "[*] Configuring user: root"
+
+cp /root/.bashrc /root/.bashrc.bak 2>/dev/null || true
+cp /root/.profile /root/.profile.bak 2>/dev/null || true
+
+if [ ! -d /root/.oh-my-zsh ]; then
+  cp -r "$TEMP_OHMYZSH" /root/.oh-my-zsh
+  chown -R root:root /root/.oh-my-zsh
+fi
+
+echo "$ZSHRC_CONTENT" > /root/.zshrc
+chown root:root /root/.zshrc
+chsh -s "$(which zsh)" root
+
+# ----------- STEP 6: Set default shell for future users -----------
+
+echo "[*] Setting Zsh as default shell for new users..."
 sed -i 's|^SHELL=.*|SHELL=/usr/bin/zsh|' /etc/default/useradd
 
-echo "[✔] Zsh environment applied to all users (existing and future)."
-echo "[ℹ️ ] You may need to re-login or run 'zsh' manually to see the changes."
+echo "[✔] Zsh environment applied to all users (existing + root + new)."
+echo "[ℹ️ ] Re-login or run 'zsh' to use the new shell."
