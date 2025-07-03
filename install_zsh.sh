@@ -1,46 +1,38 @@
 #!/bin/bash
 set -e
 
-# ---------- Step 1: Install Zsh & dependencies ----------
-echo "[*] Installing Zsh and dependencies..."
-sudo apt update
-sudo apt install -y zsh git curl wget neovim
+echo "[*] Installing dependencies..."
+apt update
+apt install -y zsh git curl wget neovim
 
-# ---------- Step 2: Install Oh My Zsh ----------
-if [ ! -d "$HOME/.oh-my-zsh" ]; then
-  echo "[*] Installing Oh My Zsh..."
-  RUNZSH=no KEEP_ZSHRC=yes sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-else
-  echo "[*] Oh My Zsh already installed."
+# ----------- STEP 1: Prepare Oh My Zsh and Plugins -----------
+
+TEMP_OHMYZSH="/tmp/oh-my-zsh"
+ZSH_CUSTOM="$TEMP_OHMYZSH/custom"
+
+if [ ! -d "$TEMP_OHMYZSH" ]; then
+  echo "[*] Cloning Oh My Zsh..."
+  git clone https://github.com/ohmyzsh/ohmyzsh.git "$TEMP_OHMYZSH"
 fi
 
-# ---------- Step 3: Install Plugins ----------
-ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
-echo "[*] Installing Zsh plugins..."
+# Clone plugins if not already present
+mkdir -p "$ZSH_CUSTOM/plugins"
 
-# Autosuggestions
-if [ ! -d "$ZSH_CUSTOM/plugins/zsh-autosuggestions" ]; then
+[[ ! -d "$ZSH_CUSTOM/plugins/zsh-autosuggestions" ]] &&
   git clone https://github.com/zsh-users/zsh-autosuggestions "$ZSH_CUSTOM/plugins/zsh-autosuggestions"
-fi
 
-# Syntax Highlighting
-if [ ! -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" ]; then
+[[ ! -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" ]] &&
   git clone https://github.com/zsh-users/zsh-syntax-highlighting "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting"
-fi
 
-# Completions
-if [ ! -d "$ZSH_CUSTOM/plugins/zsh-completions" ]; then
+[[ ! -d "$ZSH_CUSTOM/plugins/zsh-completions" ]] &&
   git clone https://github.com/zsh-users/zsh-completions "$ZSH_CUSTOM/plugins/zsh-completions"
-fi
 
-# ---------- Step 4: Configure .zshrc ----------
-echo "[*] Applying custom .zshrc..."
-cat > ~/.zshrc << 'EOF'
-# Path to your Oh My Zsh installation.
+# ----------- STEP 2: Define .zshrc Template -----------
+
+ZSHRC_CONTENT='
 export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME="robbyrussell"
 
-# Plugins
 plugins=(
   git 
   z 
@@ -53,28 +45,62 @@ plugins=(
 
 source $ZSH/oh-my-zsh.sh
 
-# Preferred editor
-export EDITOR='nvim'
-export VISUAL='nvim'
+export EDITOR="nvim"
+export VISUAL="nvim"
 
-# Aliases
-alias vim='nvim'
+alias vim="nvim"
 alias zshconfig="nvim ~/.zshrc"
 alias ohmyzsh="nvim ~/.oh-my-zsh"
 
-# Enable colors for prompt
 autoload -Uz colors && colors
 
-# Custom colorful prompt
-PROMPT='%{$fg[blue]%}[%*]%{$reset_color%} %{$fg[green]%}%n@%m%{$reset_color%} %{$fg[yellow]%}%~%{$reset_color%}$(git_branch) $ '
+PROMPT="%{\$fg[blue]%}[%*]%{\$reset_color%} %{\$fg[green]%}%n@%m%{\$reset_color%} %{\$fg[yellow]%}%~%{\$reset_color%}\$(git_branch) \$ "
 
 ENABLE_CORRECTION="true"
 COMPLETION_WAITING_DOTS="true"
 HIST_STAMPS="yyyy-mm-dd"
-EOF
+function git_branch() {
+  git rev-parse --is-inside-work-tree &>/dev/null || return
+  ref=$(git symbolic-ref --quiet HEAD 2>/dev/null)
+  echo " %{$fg[magenta]%}( ${ref#refs/heads/})%{$reset_color%}"
+}
 
-# ---------- Step 5: Set Zsh as default shell ----------
-echo "[*] Setting Zsh as default shell..."
-chsh -s "$(which zsh)"
+'
 
-echo "[✔] Done. Please logout or run 'zsh' to start using Zsh."
+# ----------- STEP 3: Apply to /etc/skel (for future users) -----------
+
+echo "[*] Setting up /etc/skel for new users..."
+
+cp -r "$TEMP_OHMYZSH" /etc/skel/.oh-my-zsh
+echo "$ZSHRC_CONTENT" > /etc/skel/.zshrc
+
+# ----------- STEP 4: Apply to existing users -----------
+
+echo "[*] Applying to existing users..."
+
+for user in $(awk -F: '{ if ($3 >= 1000 && $1 != "nobody") print $1 }' /etc/passwd); do
+  HOME_DIR=$(eval echo "~$user")
+
+  echo "  -> Configuring user: $user"
+
+  # Copy .oh-my-zsh if needed
+  if [ ! -d "$HOME_DIR/.oh-my-zsh" ]; then
+    cp -r "$TEMP_OHMYZSH" "$HOME_DIR/.oh-my-zsh"
+    chown -R "$user:$user" "$HOME_DIR/.oh-my-zsh"
+  fi
+
+  # Write .zshrc
+  echo "$ZSHRC_CONTENT" > "$HOME_DIR/.zshrc"
+  chown "$user:$user" "$HOME_DIR/.zshrc"
+
+  # Change shell to zsh
+  chsh -s "$(which zsh)" "$user"
+done
+
+# ----------- STEP 5: Set default shell globally (optional) -----------
+
+echo "[*] Setting Zsh as default shell for new users (via /etc/default/useradd)..."
+sed -i 's|^SHELL=.*|SHELL=/usr/bin/zsh|' /etc/default/useradd
+
+echo "[✔] Zsh environment applied to all users (existing and future)."
+echo "[ℹ️ ] You may need to re-login or run 'zsh' manually to see the changes."
