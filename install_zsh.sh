@@ -54,8 +54,12 @@ alias ohmyzsh="nvim ~/.oh-my-zsh"
 
 autoload -Uz colors && colors
 
-PROMPT="%{\$fg[blue]%}[%*]%{\$reset_color%} %{\$fg[green]%}%n@%m%{\$reset_color%} %{\$fg[yellow]%}%~%{\$reset_color%}\$(git_branch) \$ "
+force_tilde_path() {
+  echo "~/${PWD##*/}"
+}
 
+# Custom colorful prompt
+PROMPT='%{$fg[blue]%}[%*]%{$reset_color%} %{$fg[green]%}%n@%m%{$reset_color%} %{$fg[yellow]%}$(force_tilde_path)%{$reset_color%}$(git_branch) $ '
 ENABLE_CORRECTION="true"
 COMPLETION_WAITING_DOTS="true"
 HIST_STAMPS="yyyy-mm-dd"
