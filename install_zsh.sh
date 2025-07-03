@@ -29,7 +29,7 @@ mkdir -p "$ZSH_CUSTOM/plugins"
 
 # ----------- STEP 2: Define .zshrc Template -----------
 
-cat <<'EOF' > /etc/skel/.zshrc
+ZSHRC_CONTENT='
 export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME="robbyrussell"
 
@@ -59,7 +59,7 @@ force_tilde_path() {
 }
 
 # Custom colorful prompt
-PROMPT='%{$fg[blue]%}[%*]%{$reset_color%} %{$fg[green]%}%n@%m%{$reset_color%} %{$fg[yellow]%}$(force_tilde_path)%{$reset_color%}$(git_branch) $ '
+PROMPT="%{$fg[blue]%}[%*]%{$reset_color%} %{$fg[green]%}%n@%m%{$reset_color%} %{$fg[yellow]%}$(force_tilde_path)%{$reset_color%}$(git_branch) $ "
 ENABLE_CORRECTION="true"
 COMPLETION_WAITING_DOTS="true"
 HIST_STAMPS="yyyy-mm-dd"
@@ -69,7 +69,7 @@ function git_branch() {
   ref=$(git symbolic-ref --quiet HEAD 2>/dev/null)
   echo " %{\$fg[magenta]%}( \${ref#refs/heads/})%{\$reset_color%}"
 }
-EOF
+'
 
 # ----------- STEP 3: Apply to /etc/skel (for future users) -----------
 
