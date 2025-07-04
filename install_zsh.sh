@@ -59,8 +59,8 @@ force_tilde_path() {
 }
 
 # Custom colorful prompt
-PROMPT="%{$fg[blue]%}[%*]%{$reset_color%} %{$fg[green]%}%n@%m%{$reset_color%} %{$fg[yellow]%}$(force_tilde_path)%{$reset_color%}$(git_branch) $ "
-ENABLE_CORRECTION="true"
+PROMPT='%{$fg[blue]%}[%*]%{$reset_color%} %{$fg[green]%}%n@%m%{$reset_color%} %{$fg[yellow]%}$(force_tilde_path)%{$reset_color%}$(git_branch) $ "
+ENABLE_CORRECTION="true'
 COMPLETION_WAITING_DOTS="true"
 HIST_STAMPS="yyyy-mm-dd"
 
