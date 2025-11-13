@@ -62,6 +62,12 @@ else
   echo "--- docker compose plugin already available ---"
 fi
 
+# 3.5. Pastikan Python3 tersedia
+echo "--- Ensuring Python3 is installed ---"
+if ! command -v python3 &> /dev/null; then
+  sudo apt install -y python3 python3-venv python3-distutils
+fi
+
 # 4. Install Ansible & dependensi lainnya
 echo "--- Installing Ansible & dependencies ---"
 sudo apt install -y python3-setuptools python3-pip git pwgen
@@ -107,7 +113,7 @@ echo
 
 # 9. Deploy AWX
 echo "--- Running Ansible playbook to install AWX ---"
-ansible-playbook -i "${INVENTORY_FILE}" install.yml
+ansible-playbook -i "${INVENTORY_FILE}" install.yml -e "ansible_python_interpreter=/usr/bin/python3"
 
 # 10. Verifikasi
 echo "--- Checking running containers ---"
