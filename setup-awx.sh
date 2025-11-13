@@ -119,6 +119,7 @@ fi
 
 # 9. Deploy AWX
 echo "--- Running Ansible playbook to install AWX ---"
+alias docker-compose='docker compose'
 ansible-playbook -i "${INVENTORY_FILE}" install.yml -e "ansible_python_interpreter=/usr/bin/python3"
 
 # 10. Verifikasi
