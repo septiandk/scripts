@@ -176,6 +176,8 @@ cat > /opt/awx/awx/installer/roles/local_docker/tasks/compose.yml <<'EOF'
 EOF
 echo "--- compose.yml patched successfully ---"
 
+sudo sed -i 's|{{ *docker_compose_dir *}}|/root/.awx/awxcompose|g' /opt/awx/awx/installer/roles/local_docker/templates/docker-compose.yml.j2
+
 # 7. Generate secret key
 echo "--- Generating secret key for AWX ---"
 SECRET_KEY=$(pwgen -N 1 -s 30)
