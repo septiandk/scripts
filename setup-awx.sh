@@ -64,7 +64,7 @@ fi
 
 # 4. Install Ansible & dependensi lainnya
 echo "--- Installing Ansible & dependencies ---"
-sudo apt install -y python3-setuptools git pwgen
+sudo apt install -y python3-setuptools python3-pip git pwgen
 sudo pip3 install ansible
 
 echo "--- Verifying installations ---"
