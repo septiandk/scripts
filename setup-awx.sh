@@ -102,10 +102,11 @@ INVENTORY_FILE="./inventory"
 echo "--- Configuring inventory file ---"
 cp inventory inventory.bak || true
 
-sed -i "s/^#\?admin_user=.*/admin_user=${ADMIN_USER}/" "${INVENTORY_FILE}"
-sed -i "s/^#\?admin_password=.*/admin_password=${ADMIN_PASSWORD}/" "${INVENTORY_FILE}"
-sed -i "s/^#\?secret_key=.*/secret_key=${SECRET_KEY}/" "${INVENTORY_FILE}"
-sed -i "s/^#\?host_port=.*/host_port=${HOST_PORT}/" "${INVENTORY_FILE}"
+# Ganti baris dengan toleransi spasi
+sed -i -E "s|^#?\s*admin_user\s*=.*|admin_user=${ADMIN_USER}|" "${INVENTORY_FILE}"
+sed -i -E "s|^#?\s*admin_password\s*=.*|admin_password=${ADMIN_PASSWORD}|" "${INVENTORY_FILE}"
+sed -i -E "s|^#?\s*secret_key\s*=.*|secret_key=${SECRET_KEY}|" "${INVENTORY_FILE}"
+sed -i -E "s|^#?\s*host_port\s*=.*|host_port=${HOST_PORT}|" "${INVENTORY_FILE}"
 
 echo "Inventory configured with:"
 grep -E "admin_user|admin_password|secret_key|host_port" "${INVENTORY_FILE}" | sed 's/^/  /'
