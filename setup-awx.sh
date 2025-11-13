@@ -102,14 +102,19 @@ INVENTORY_FILE="./inventory"
 echo "--- Configuring inventory file ---"
 cp inventory inventory.bak || true
 
-sed -i "s/^admin_user=.*$/admin_user=${ADMIN_USER}/" "${INVENTORY_FILE}"
-sed -i "s/^admin_password=.*$/admin_password=${ADMIN_PASSWORD}/" "${INVENTORY_FILE}"
-sed -i "s/^#\?secret_key=.*$/secret_key=${SECRET_KEY}/" "${INVENTORY_FILE}"
-sed -i "s/^#\?host_port=.*$/host_port=${HOST_PORT}/" "${INVENTORY_FILE}"
+sed -i "s/^#\?admin_user=.*/admin_user=${ADMIN_USER}/" "${INVENTORY_FILE}"
+sed -i "s/^#\?admin_password=.*/admin_password=${ADMIN_PASSWORD}/" "${INVENTORY_FILE}"
+sed -i "s/^#\?secret_key=.*/secret_key=${SECRET_KEY}/" "${INVENTORY_FILE}"
+sed -i "s/^#\?host_port=.*/host_port=${HOST_PORT}/" "${INVENTORY_FILE}"
 
 echo "Inventory configured with:"
-grep -E "admin_user|admin_password|secret_key|host_port" "${INVENTORY_FILE}"
+grep -E "admin_user|admin_password|secret_key|host_port" "${INVENTORY_FILE}" | sed 's/^/  /'
 echo
+
+if ! grep -q "^admin_password=" "${INVENTORY_FILE}"; then
+  echo "ERROR: admin_password tidak ter-set dengan benar di ${INVENTORY_FILE}"
+  exit 1
+fi
 
 # 9. Deploy AWX
 echo "--- Running Ansible playbook to install AWX ---"
